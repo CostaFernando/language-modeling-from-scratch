@@ -48,6 +48,15 @@ outputs/
 *.pth
 *.safetensors
 
+# Assignment 1 local datasets and generated submission files
+/assignment1-basics/data/*
+!/assignment1-basics/data/.gitkeep
+/assignment1-basics/test_results.xml
+/assignment1-basics/*.zip
+
+# Official model fixture required by the Assignment 1 tests
+!/assignment1-basics/tests/fixtures/ts_tests/model.pt
+
 # Experiment tracking, logs, and runtime caches
 wandb/
 mlruns/

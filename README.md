@@ -10,7 +10,7 @@ Based on the [Spring 2026 course outline](https://cs336.stanford.edu/#coursework
 
 | Assignment | Focus | Status |
 | --- | --- | --- |
-| 1 — Basics | Tokenization, Transformer architecture, optimizers, and language model training | Not started |
+| [1 — Basics](assignment1-basics/SETUP.md) | Tokenization, Transformer architecture, optimizers, and language model training | Starter ready |
 | 2 — Systems | Profiling, efficient attention, and distributed training | Not started |
 | 3 — Scaling | Transformer components and scaling laws | Not started |
 | 4 — Data | Pretraining data preparation, filtering, and deduplication | Not started |
@@ -23,7 +23,13 @@ git clone https://github.com/CostaFernando/language-modeling-from-scratch.git
 cd language-modeling-from-scratch
 ```
 
-The repository currently contains only this README and a `.gitignore`. Setup instructions, dependencies, and commands for running each assignment will be added alongside its implementation.
+Assignment 1 is ready in [`assignment1-basics/`](assignment1-basics/). See its [local setup guide](assignment1-basics/SETUP.md) for environment setup, test commands, and file locations. Run assignment commands from that directory.
+
+```bash
+cd assignment1-basics
+uv sync --locked --python 3.12
+uv run --locked pytest --collect-only -q
+```
 
 ## Repository conventions
 
