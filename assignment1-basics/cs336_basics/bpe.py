@@ -68,6 +68,8 @@ def remove_sequence_pairs(
     for token_index in range(len(tokens) - 1):
         pair = (tokens[token_index], tokens[token_index + 1])
         pair_counts[pair] -= frequency
+        if pair_counts[pair] == 0:
+            del pair_counts[pair]
         # A pair may occur repeatedly in the same sequence.
         pair_sequence_indices[pair].discard(sequence_index)
 
@@ -113,8 +115,7 @@ def train_bpe_tokenizer(
     pair_counts, pair_sequence_indices = count_pairs(sequences)
 
     while len(vocab) < vocab_size:
-        # Zero-count entries are retained when removing sequence contributions.
-        if not pair_counts or all(count == 0 for count in pair_counts.values()):
+        if not pair_counts:
             break
 
         winning_pair = max(pair_counts, key=lambda pair: (pair_counts[pair], pair))
