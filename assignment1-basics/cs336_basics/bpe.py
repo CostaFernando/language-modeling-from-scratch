@@ -1,10 +1,20 @@
 import regex as re
+import heapq
 
 BYTE_VOCAB_SIZE = 256
 PRE_TOKEN_PATTERN = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 
 Pair = tuple[bytes, bytes]
 WeightedSequence = tuple[list[bytes], int]
+
+
+class Candidate:
+    def __init__(self, frequency, pair):
+        self.frequency = frequency
+        self.pair = pair
+
+    def __lt__(self, other):
+        return (self.frequency, self.pair) > (other.frequency, other.pair)
 
 
 def init_vocab(special_tokens: list[str]) -> dict[int, bytes]:
@@ -114,22 +124,46 @@ def train_bpe_tokenizer(
     sequences = pre_tokenize(input_text, special_tokens)
     pair_counts, pair_sequence_indices = count_pairs(sequences)
 
+    candidates = [Candidate(frequency, pair) for pair, frequency in pair_counts.items()]
+    heapq.heapify(candidates)
+
     while len(vocab) < vocab_size:
         if not pair_counts:
             break
 
-        winning_pair = max(pair_counts, key=lambda pair: (pair_counts[pair], pair))
+        winning_pair = None
+        while winning_pair is None and candidates:
+            winning_candidate = heapq.heappop(candidates)
+            current_count = pair_counts.get(winning_candidate.pair, 0)
+
+            if current_count > 0 and current_count == winning_candidate.frequency:
+                winning_pair = winning_candidate.pair
+
+        if winning_pair is None:
+            break
+
+        changed_pairs = set()
         # The helpers below modify the original sets, so iterate over a snapshot.
         affected_indices = pair_sequence_indices[winning_pair].copy()
 
         for sequence_index in affected_indices:
             old_tokens, frequency = sequences[sequence_index]
             remove_sequence_pairs(old_tokens, frequency, sequence_index, pair_counts, pair_sequence_indices)
+            for i in range(len(old_tokens) - 1):
+                changed_pairs.add((old_tokens[i], old_tokens[i + 1]))
 
             updated_tokens = merge_pair(old_tokens, winning_pair)
             add_sequence_pairs(updated_tokens, frequency, sequence_index, pair_counts, pair_sequence_indices)
+            for i in range(len(updated_tokens) - 1):
+                changed_pairs.add((updated_tokens[i], updated_tokens[i + 1]))
 
             sequences[sequence_index] = (updated_tokens, frequency)
+
+        for pair in changed_pairs:
+            current_count = pair_counts.get(pair, 0)
+
+            if current_count > 0:
+                heapq.heappush(candidates, Candidate(current_count, pair))
 
         merges.append(winning_pair)
         vocab[len(vocab)] = winning_pair[0] + winning_pair[1]
